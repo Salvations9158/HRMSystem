@@ -17,7 +17,18 @@ typedef struct
     char position[20];   // 직급
     char phone[20];      // 전화번호
     char hire_date[15];  // 입사 날짜
+    int salary;          // 봉급
 } User;
+
+// Evaluation(인사평가) 구조체
+typedef struct
+{
+    char evaluator_id[20]; // 평가자 ID 
+    char employee_id[20];  // 피평가자 ID 
+	int teamwork_score;    // 팀워크 점수(0~100)
+	int attitude_score;    // 태도 점수(0~100)
+    char comments[100];    // 코멘트
+} Evaluation;
 
 // --- 함수 원형 선언 ---
 
