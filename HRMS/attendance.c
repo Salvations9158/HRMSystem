@@ -66,7 +66,7 @@ void load_attendance() {
         attendance_list[attendance_count].check_out,
         &attendance_list[attendance_count].work_hours,
         attendance_list[attendance_count].status) == 6) {
-        
+
         attendance_count++;
         if (attendance_count >= 500) break;
     }
@@ -183,27 +183,14 @@ void my_attendance(User* user) {
         }
     }
 
-    int btn_x = BOX_X + 2;
-    int btn_y = BOX_Y + BOX_H - 2;
-
-    gotoxy(btn_x, btn_y);
+    // 완료 메시지 출력 및 키 입력 대기
+    gotoxy(BOX_X, BOX_Y + BOX_H + 3);
     set_color(11, 0);
-    printf("돌아가기");
-    set_color(15, 0);
+    printf(">> 아무 키나 누르시면 이전 메뉴로 돌아갑니다.");
 
-    // 마우스 입력 루프
-    int mx, my;
-    while (1) {
-        if (get_mouse_click(&mx, &my)) {
-            if (my >= btn_y - 1 && my <= btn_y + 1) {
-                if (mx >= btn_x && mx <= btn_x + 25) {
-                    break; // 루프 탈출 -> 함수 종료
-                }
-            }
-        }
-    }
+    // 키 입력 대기
+    _getch();
 }
-
 // ------------------------------------------------------------------
 // 4. 전체 근태 조회
 // ------------------------------------------------------------------
