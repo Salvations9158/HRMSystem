@@ -18,13 +18,13 @@
 #define BTN_WIDTH 30
 
 // ------------------------------------------------------------------
-// 근태 데이터
+// 근태 데이터 전역 변수
 // ------------------------------------------------------------------
 Attendance attendance_list[500];
 int attendance_count = 0;
 
 // ------------------------------------------------------------------
-// 날짜/시간 자동 생성
+// 날짜/시간 자동 생성 도구 함수
 // ------------------------------------------------------------------
 void get_today(char* buffer) {
     time_t t = time(NULL);
@@ -39,7 +39,7 @@ void get_time_now(char* buffer) {
 }
 
 // ------------------------------------------------------------------
-// 메시지 표시 함수
+// 메시지 표시 함수 (잠깐 떴다 사라짐)
 // ------------------------------------------------------------------
 void show_message(const char* msg, int x, int y, int color, int duration_ms) {
     gotoxy(x, y);
@@ -66,6 +66,7 @@ void load_attendance() {
         attendance_list[attendance_count].check_out,
         &attendance_list[attendance_count].work_hours,
         attendance_list[attendance_count].status) == 6) {
+        
         attendance_count++;
         if (attendance_count >= 500) break;
     }
@@ -89,12 +90,13 @@ void save_attendance() {
 }
 
 // ------------------------------------------------------------------
-// 출근 처리
+// 1. 출근 처리
 // ------------------------------------------------------------------
 void check_in(User* user) {
     char today[20];
     get_today(today);
 
+    // 이미 출근했는지 확인
     for (int i = 0; i < attendance_count; i++) {
         if (strcmp(attendance_list[i].user_id, user->id) == 0 &&
             strcmp(attendance_list[i].date, today) == 0 &&
@@ -104,6 +106,7 @@ void check_in(User* user) {
         }
     }
 
+    // 새 기록 추가
     Attendance* a = &attendance_list[attendance_count];
     strcpy(a->user_id, user->id);
     strcpy(a->date, today);
@@ -119,7 +122,7 @@ void check_in(User* user) {
 }
 
 // ------------------------------------------------------------------
-// 퇴근 처리
+// 2. 퇴근 처리
 // ------------------------------------------------------------------
 void check_out(User* user) {
     char today[20];
@@ -132,6 +135,7 @@ void check_out(User* user) {
 
             get_time_now(attendance_list[i].check_out);
 
+            // 시간 차이 계산
             int in_h, in_m, in_s, out_h, out_m, out_s;
             sscanf(attendance_list[i].check_in, "%d:%d:%d", &in_h, &in_m, &in_s);
             sscanf(attendance_list[i].check_out, "%d:%d:%d", &out_h, &out_m, &out_s);
@@ -157,7 +161,7 @@ void check_out(User* user) {
 }
 
 // ------------------------------------------------------------------
-// 내 근태 조회
+// 3. 내 근태 조회 (수정됨: 마우스 클릭 범위 확대)
 // ------------------------------------------------------------------
 void my_attendance(User* user) {
     FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
@@ -166,6 +170,8 @@ void my_attendance(User* user) {
 
     int line = BOX_Y + 2;
     for (int i = 0; i < attendance_count; i++) {
+        if (line >= BOX_Y + BOX_H - 2) break; // 화면 넘어감 방지
+
         if (strcmp(attendance_list[i].user_id, user->id) == 0) {
             gotoxy(BOX_X + 2, line++);
             set_color(15, 0);
@@ -177,15 +183,29 @@ void my_attendance(User* user) {
         }
     }
 
-    gotoxy(BOX_X + 2, BOX_Y + BOX_H - 2);
+    int btn_x = BOX_X + 2;
+    int btn_y = BOX_Y + BOX_H - 2;
+
+    gotoxy(btn_x, btn_y);
     set_color(11, 0);
-    printf("<< 돌아가기 >>");
+    printf("돌아가기");
     set_color(15, 0);
-    _getch();
+
+    // 마우스 입력 루프
+    int mx, my;
+    while (1) {
+        if (get_mouse_click(&mx, &my)) {
+            if (my >= btn_y - 1 && my <= btn_y + 1) {
+                if (mx >= btn_x && mx <= btn_x + 25) {
+                    break; // 루프 탈출 -> 함수 종료
+                }
+            }
+        }
+    }
 }
 
 // ------------------------------------------------------------------
-// 전체 근태 조회 (관리자)
+// 4. 전체 근태 조회
 // ------------------------------------------------------------------
 void all_attendance() {
     FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
@@ -194,6 +214,8 @@ void all_attendance() {
 
     int line = BOX_Y + 2;
     for (int i = 0; i < attendance_count; i++) {
+        if (line >= BOX_Y + BOX_H - 2) break;
+
         gotoxy(BOX_X + 2, line++);
         set_color(15, 0);
         printf("%s (%s) | 출근:%s | 퇴근:%s | %s",
@@ -204,15 +226,31 @@ void all_attendance() {
             attendance_list[i].status);
     }
 
-    gotoxy(BOX_X + 2, BOX_Y + BOX_H - 2);
+    // [돌아가기 버튼 위치 설정]
+    int btn_x = BOX_X + 2;
+    int btn_y = BOX_Y + BOX_H - 2;
+
+    gotoxy(btn_x, btn_y);
     set_color(11, 0);
     printf("<< 돌아가기 >>");
     set_color(15, 0);
-    _getch();
+
+    // 마우스 입력 루프
+    int mx, my;
+    while (1) {
+        if (get_mouse_click(&mx, &my)) {
+            // [중요 수정] Y좌표 범위 여유 (위아래 1칸씩)
+            if (my >= btn_y - 1 && my <= btn_y + 1) {
+                if (mx >= btn_x && mx <= btn_x + 25) {
+                    break; // 루프 탈출 -> 함수 종료
+                }
+            }
+        }
+    }
 }
 
 // ------------------------------------------------------------------
-// 근태 메뉴 TUI
+// 메인 메뉴 (화면 갱신 로직 포함)
 // ------------------------------------------------------------------
 void attendance_menu(User* user) {
     int mx, my;
@@ -220,7 +258,7 @@ void attendance_menu(User* user) {
 
     load_attendance();
 
-    // 메뉴 UI 한 번만 그림 (깜빡임 방지)
+    // 초기 화면 그리기
     system("cls");
     draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, "근태 관리");
     draw_button(MENU_X, BTN_Y_1, "1. 출근 체크", 0);
@@ -229,6 +267,7 @@ void attendance_menu(User* user) {
     if (is_admin) draw_button(MENU_X, BTN_Y_4, "4. 전체 근태 조회", 0);
     draw_button(MENU_X, BTN_Y_0, "0. 이전 메뉴로", 0);
 
+    // 마우스 입력 모드 활성화 (필수)
     HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
     DWORD mode;
     GetConsoleMode(hInput, &mode);
@@ -236,11 +275,44 @@ void attendance_menu(User* user) {
 
     while (1) {
         if (get_mouse_click(&mx, &my)) {
-            if (my == BTN_Y_1 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) check_in(user);
-            else if (my == BTN_Y_2 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) check_out(user);
-            else if (my == BTN_Y_3 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) my_attendance(user);
-            else if (is_admin && my == BTN_Y_4 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) all_attendance();
-            else if (my == BTN_Y_0 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) return;
+            // 1. 출근
+            if (my == BTN_Y_1 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+                check_in(user);
+            }
+            // 2. 퇴근
+            else if (my == BTN_Y_2 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+                check_out(user);
+            }
+            // 3. 내 조회 (갔다오면 화면 다시 그림)
+            else if (my == BTN_Y_3 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+                my_attendance(user);
+
+                // 복귀 후 메뉴 다시 그리기
+                system("cls");
+                draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, "근태 관리");
+                draw_button(MENU_X, BTN_Y_1, "1. 출근 체크", 0);
+                draw_button(MENU_X, BTN_Y_2, "2. 퇴근 체크", 0);
+                draw_button(MENU_X, BTN_Y_3, "3. 내 근태 조회", 0);
+                if (is_admin) draw_button(MENU_X, BTN_Y_4, "4. 전체 근태 조회", 0);
+                draw_button(MENU_X, BTN_Y_0, "0. 이전 메뉴로", 0);
+            }
+            // 4. 전체 조회 (갔다오면 화면 다시 그림)
+            else if (is_admin && my == BTN_Y_4 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+                all_attendance();
+
+                // 복귀 후 메뉴 다시 그리기
+                system("cls");
+                draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, "근태 관리");
+                draw_button(MENU_X, BTN_Y_1, "1. 출근 체크", 0);
+                draw_button(MENU_X, BTN_Y_2, "2. 퇴근 체크", 0);
+                draw_button(MENU_X, BTN_Y_3, "3. 내 근태 조회", 0);
+                if (is_admin) draw_button(MENU_X, BTN_Y_4, "4. 전체 근태 조회", 0);
+                draw_button(MENU_X, BTN_Y_0, "0. 이전 메뉴로", 0);
+            }
+            // 0. 종료
+            else if (my == BTN_Y_0 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+                return;
+            }
         }
     }
 }
