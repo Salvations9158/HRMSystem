@@ -276,54 +276,61 @@ void attendance_menu(User* user) {
 
     load_attendance();
 
-    system("cls");
-    draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, "근태 관리");
-
-    // 버튼 표시
-    draw_button(MENU_X, BTN_Y_1, "1. 출근 체크", 0);
-    draw_button(MENU_X, BTN_Y_2, "2. 퇴근 체크", 0);
-    draw_button(MENU_X, BTN_Y_3, "3. 내 근태 조회", 0);
-    if (is_admin)
-        draw_button(MENU_X, BTN_Y_4, "4. 전체 근태 조회", 0);
-    draw_button(MENU_X, BTN_Y_0, "0. 이전 메뉴로", 0);
-
-
     while (1) {
-        // 마우스 입력 활성화 (QuickEdit 비활성)
+
+        // 화면 초기화 + UI 다시 그리기
+        system("cls");
+        draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, "근태 관리");
+
+        draw_button(MENU_X, BTN_Y_1, "1. 출근 체크", 0);
+        draw_button(MENU_X, BTN_Y_2, "2. 퇴근 체크", 0);
+        draw_button(MENU_X, BTN_Y_3, "3. 내 근태 조회", 0);
+        if (is_admin)
+            draw_button(MENU_X, BTN_Y_4, "4. 전체 근태 조회", 0);
+        draw_button(MENU_X, BTN_Y_0, "0. 이전 메뉴로", 0);
+
+        // 마우스 입력 모드 활성화
         HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
         DWORD mode;
         GetConsoleMode(hInput, &mode);
         SetConsoleMode(hInput,
             (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT);
 
-        // 버튼 클릭 이벤트 처리
-        if (get_mouse_click(&mx, &my)) {
+        // 클릭 감지 루프
+        while (!get_mouse_click(&mx, &my)) {
+            // 클릭될 때까지 대기
+        }
 
-            if (my == BTN_Y_1 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH)
-                check_in(user);
+        // ========== 버튼 클릭 판정 ==========
 
-            else if (my == BTN_Y_2 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH)
-                check_out(user);
+        // 출근 체크
+        if (my == BTN_Y_1 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+            check_in(user);
+        }
 
-            else if (my == BTN_Y_3 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
-                my_attendance(user);
+        // 퇴근 체크
+        else if (my == BTN_Y_2 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+            check_out(user);
+        }
 
-                // 돌아오면 UI 재출력
-                attendance_menu(user);
-                return;
-            }
+        // 내 근태 조회
+        else if (my == BTN_Y_3 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+            my_attendance(user);
+            // 돌아오면 while(1)의 맨 위에서 UI 다시 그림
+        }
 
-            else if (is_admin && my == BTN_Y_4 &&
-                mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
-                all_attendance();
-                attendance_menu(user);
-                return;
-            }
+        // 전체 근태 조회 (관리자만)
+        else if (is_admin &&
+            my == BTN_Y_4 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+            all_attendance();
+            // 돌아오면 while(1) 상단에서 UI 다시 그림
+        }
 
-            else if (my == BTN_Y_0 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
-                show_main_menu(user);
-                return;
-            }
+        // 이전 메뉴로
+        else if (my == BTN_Y_0 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
+            show_main_menu(user); // 다른 메뉴로 이동
+            return;
         }
     }
 }
+

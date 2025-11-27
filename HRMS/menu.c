@@ -86,6 +86,7 @@ void show_main_menu(User* user)
                     printf(">> [공통] 근태 관리 기능 실행            ");
                     Sleep(700);
                     attendance_menu(user); // 근태 관리 연결
+					system("cls");
                     break;
 
                 case 10: // 관리자: 3. 급여 관리
