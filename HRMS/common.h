@@ -113,6 +113,8 @@ int get_mouse_click(int* x, int* y);            // 마우스 클릭 이벤트 감지
 
 void create_dummy_data();              // 테스트용 임시 계정 데이터 생성
 int login_process(User* login_user);   // 로그인 프로세스 수행
+void find_account_process();           //계정(PW) 찾기 프로세스 수행
+
 
 
 // =====================================================

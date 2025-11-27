@@ -1,10 +1,10 @@
 /*
 담당자: 전민규
-최근 업데이트: 2025.11.24 / 13:23
+최근 업데이트: 2025.11.28 / 12:57
 진행상태:
 1-0 'User.txt' 파일이 없을 경우 더미 데이터 생성 기능 구현 완료
 1-1 로그인 프로세스 기능 구현 완료
-1-2 ID를 통한 패스워드 찾기 기능 미구현 (추후 작업 예정)       
+1-2 ID를 통한 패스워드 찾기 기능 구현 완료
 */
 #include "common.h"
 
@@ -202,7 +202,28 @@ int login_process(User* login_user)
                     set_color(15, 0);
                 }
             }
-            // 4. 종료 버튼
+            // 4. PW찾기 버튼
+            else if (my == box_y + 11 && mx >= btn_start_x + 11 && mx <= btn_start_x + 20)
+            {
+                find_account_process();
+
+                system("cls");
+                draw_box(box_x, box_y, 40, 14, "로그인");
+                gotoxy(25, box_y + 3); printf(" 컴공상사 인사관리 프로그램 ");
+                gotoxy(input_label_x, box_y + 6); printf("ID  : %-15s", input_id);
+                gotoxy(input_label_x, box_y + 8); printf("PW  : ");
+                draw_button(btn_start_x, box_y + 11, "로그인", 0);
+                draw_button(btn_start_x + 11, box_y + 11, "PW찾기", 0);
+                draw_button(btn_start_x + 22, box_y + 11, " 종 료 ", 0);
+
+                gotoxy(22, box_y + 13);
+                printf(">> [로그인] 버튼을 눌러주세요.");
+
+                DWORD mode;
+                GetConsoleMode(hInput, &mode);
+                SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+            }
+            // 5. 종료 버튼
             else if (my == box_y + 11 && mx >= btn_start_x + 22 && mx <= btn_start_x + 32)
             {
                 exit(0);
@@ -210,4 +231,199 @@ int login_process(User* login_user)
         }
     }
     return 0;
+}
+
+
+//PW 찾기 프로세스
+void find_account_process()
+{
+    int mx, my;
+    char input_search_id[20] = ""; // 검색할 ID
+    int is_finding = 1;
+
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+    CONSOLE_CURSOR_INFO cursorInfo;
+
+    // UI 좌표 설정
+    int box_x = 20, box_y = 5;
+    int label_x = 26;
+    int field_x = 32;
+    int btn_x = 35; // '뒤로가기' 버튼 위치
+
+    system("cls");
+
+    // 1. UI 그리기
+    draw_box(box_x, box_y, 40, 14, "비밀번호 찾기");
+    gotoxy(25, box_y + 3); printf("* 찾으실 ID를 입력하세요 *");
+
+    gotoxy(label_x, box_y + 7); printf("ID  : ");
+
+    // ---------------------------------------------------------
+    // [초기 자동 입력 모드]
+    // ---------------------------------------------------------
+    cursorInfo.dwSize = 100;
+    cursorInfo.bVisible = TRUE;
+    SetConsoleCursorInfo(hConsole, &cursorInfo);
+
+    gotoxy(field_x, box_y + 7);
+    set_color(14, 0); // 노란색
+    scanf_s("%s", input_search_id, (unsigned)sizeof(input_search_id));
+    while (getchar() != '\n'); // 엔터 버퍼 제거
+
+    set_color(15, 0);
+    gotoxy(label_x, box_y + 7);
+    printf("ID  : %-15s", input_search_id);
+
+    cursorInfo.bVisible = FALSE;
+    SetConsoleCursorInfo(hConsole, &cursorInfo);
+
+    // ---------------------------------------------------------
+    // [초기 검색 수행]
+    // ---------------------------------------------------------
+    FILE* fp = NULL;
+    User temp;
+    int found = 0;
+    int is_admin_account = 0;
+
+    if (fopen_s(&fp, "User.txt", "r") == 0 && fp != NULL)
+    {
+        while (fscanf_s(fp, "%s %s %s %s %s %s %s",
+            temp.id, (unsigned)sizeof(temp.id),
+            temp.pw, (unsigned)sizeof(temp.pw),
+            temp.name, (unsigned)sizeof(temp.name),
+            temp.department, (unsigned)sizeof(temp.department),
+            temp.position, (unsigned)sizeof(temp.position),
+            temp.phone, (unsigned)sizeof(temp.phone),
+            temp.hire_date, (unsigned)sizeof(temp.hire_date)) != EOF)
+        {
+            if (strcmp(temp.id, input_search_id) == 0)
+            {
+                found = 1;
+                if (strcmp(temp.id, "admin") == 0 || strcmp(temp.position, "사장") == 0)
+                {
+                    is_admin_account = 1;
+                }
+                break;
+            }
+        }
+        fclose(fp);
+    }
+
+    // 초기 결과 표시
+    gotoxy(22, box_y + 11);
+    if (found)
+    {
+        if (is_admin_account)
+        {
+            set_color(12, 0);
+            printf("[경고] 관리자 계정은 조회 불가합니다.");
+        }
+        else
+        {
+            set_color(11, 0);
+            printf("[알림] 해당 계정의 PW: %s", temp.pw);
+        }
+    }
+    else
+    {
+        set_color(12, 0);
+        printf("[실패] 존재하지 않는 ID입니다.");
+    }
+    set_color(15, 0);
+
+    draw_button(btn_x, box_y + 13, "뒤로가기", 0);
+
+    FlushConsoleInputBuffer(hInput);
+    DWORD mode;
+    GetConsoleMode(hInput, &mode);
+    SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+
+    // ---------------------------------------------------------
+    // [마우스 이벤트 루프] - 재검색 기능 추가
+    // ---------------------------------------------------------
+    while (is_finding)
+    {
+        if (get_mouse_click(&mx, &my))
+        {
+            // 1. ID 입력칸 클릭 (재검색 시도)
+            if (my == box_y + 7 && mx >= label_x && mx <= label_x + 25)
+            {
+                // 입력 모드 전환
+                cursorInfo.bVisible = TRUE; SetConsoleCursorInfo(hConsole, &cursorInfo);
+
+                // 기존 입력 및 결과 지우기
+                gotoxy(field_x, box_y + 7); printf("                    "); // ID칸 지움
+                gotoxy(22, box_y + 11);     printf("                                     "); // 결과칸 지움
+
+                // 입력 받기
+                gotoxy(field_x, box_y + 7); set_color(14, 0);
+                scanf_s("%s", input_search_id, (unsigned)sizeof(input_search_id));
+                while (getchar() != '\n');
+
+                // 입력 종료 처리
+                cursorInfo.bVisible = FALSE; SetConsoleCursorInfo(hConsole, &cursorInfo);
+                set_color(15, 0);
+                gotoxy(label_x, box_y + 7); printf("ID  : %-15s", input_search_id);
+
+                // --- 재검색 로직 시작 ---
+                found = 0;
+                is_admin_account = 0;
+
+                if (fopen_s(&fp, "User.txt", "r") == 0 && fp != NULL)
+                {
+                    while (fscanf_s(fp, "%s %s %s %s %s %s %s",
+                        temp.id, (unsigned)sizeof(temp.id),
+                        temp.pw, (unsigned)sizeof(temp.pw),
+                        temp.name, (unsigned)sizeof(temp.name),
+                        temp.department, (unsigned)sizeof(temp.department),
+                        temp.position, (unsigned)sizeof(temp.position),
+                        temp.phone, (unsigned)sizeof(temp.phone),
+                        temp.hire_date, (unsigned)sizeof(temp.hire_date)) != EOF)
+                    {
+                        if (strcmp(temp.id, input_search_id) == 0)
+                        {
+                            found = 1;
+                            if (strcmp(temp.id, "admin") == 0 || strcmp(temp.position, "사장") == 0)
+                            {
+                                is_admin_account = 1;
+                            }
+                            break;
+                        }
+                    }
+                    fclose(fp);
+                }
+
+                // 결과 다시 표시
+                gotoxy(22, box_y + 11);
+                if (found)
+                {
+                    if (is_admin_account)
+                    {
+                        set_color(12, 0);
+                        printf("[경고] 관리자 계정은 조회 불가합니다.");
+                    }
+                    else
+                    {
+                        set_color(11, 0);
+                        printf("[알림] 해당 계정의 PW: %s", temp.pw);
+                    }
+                }
+                else
+                {
+                    set_color(12, 0);
+                    printf("[실패] 존재하지 않는 ID입니다.");
+                }
+                set_color(15, 0);
+
+                FlushConsoleInputBuffer(hInput); // 버퍼 비우기
+            }
+
+            // 2. 뒤로가기 버튼 클릭
+            else if (my == box_y + 13 && mx >= btn_x && mx <= btn_x + 12)
+            {
+                return; // 함수 종료
+            }
+        }
+    }
 }
