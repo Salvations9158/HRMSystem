@@ -97,7 +97,7 @@ int get_mouse_click(int* x, int* y)
     if (ir.EventType == MOUSE_EVENT)
     {
         // 더블 클릭 등의 플래그가 섞여 있어도 클릭으로 인식하도록함
-        if (ir.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+		if (ir.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED && ir.Event.MouseEvent.dwEventFlags == 0) {  // 마우스 왼쪽 버튼 클릭 감지
             *x = ir.Event.MouseEvent.dwMousePosition.X;
             *y = ir.Event.MouseEvent.dwMousePosition.Y;
             return 1; // 클릭 감지 시 리턴

@@ -30,10 +30,18 @@
     <ClCompile Include="employee_info.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="attendance.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Attendance.txt">
+      <Filter>리소스 파일</Filter>
+    </Text>
   </ItemGroup>
 </Project>

@@ -26,7 +26,6 @@ void show_main_menu(User* user)
     gotoxy(2, 0);
     printf("컴공상사 HR System | 사용자: %s %s (%s)", user->name, user->position, user->department);
     set_color(15, 0);
-
     draw_box(box_x, box_y, 70, 18, is_admin ? "관리자 메인 메뉴" : "일반직원 메인 메뉴");
 
     if (is_admin)
@@ -94,7 +93,9 @@ void show_main_menu(User* user)
 
                 case 8: // 공통: 2. 근태 관리
                     printf(">> [공통] 근태 관리 기능 실행            ");
-                    //여기다가 작업
+                    Sleep(700);
+                    attendance_menu(user); // 근태 관리 연결
+					system("cls");
                     break;
 
                 case 10: // 관리자: 3. 급여 관리

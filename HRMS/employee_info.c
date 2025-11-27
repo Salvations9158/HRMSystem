@@ -44,23 +44,6 @@ draw_button(MENU_X, BTN_Y_1, "1. 개인 정보 조회", 0); \
 draw_button(MENU_X, BTN_Y_2, "2. 직원 조회 (미구현)", 0); \
 draw_button(MENU_X, BTN_Y_0, "0. 이전 메뉴로 (미구현)", 0); 
 
-// 메인화면 UI(메뉴화면 재출력용)
-#define DRAW_MAIN_MENU_UI() \
-system("cls"); \
-set_color(0, 15); \
-gotoxy(0, 0); \
-for (int i = 0; i < 80; i++) printf(" "); \
-gotoxy(2, 0); \
-printf("컴공상사 HR System | 사용자: %s %s (%s)", user->name, user->position, user->department); \
-set_color(15, 0); \
-draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, "일반직원 메인 메뉴"); \
-draw_button(MENU_X, 6, "1. 내 정보 / 직원 조회", 0); \
-draw_button(MENU_X, 8, "2. 근태 관리          ", 0); \
-draw_button(MENU_X, 10, "3. 급여 / 평가        ", 0); \
-draw_button(MENU_X, 12, "4. 결재 처리          ", 0); \
-draw_button(MENU_X, 14, "5. 공지사항           ", 0); \
-draw_button(MENU_X, 18, "0. 로그아웃           ", 0); \
-
 
 
 // ------------------------------------------------------------------
