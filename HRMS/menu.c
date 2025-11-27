@@ -17,7 +17,6 @@ void show_main_menu(User* user)
     gotoxy(2, 0);
     printf("컴공상사 HR System | 사용자: %s %s (%s)", user->name, user->position, user->department);
     set_color(15, 0);
-
     draw_box(box_x, box_y, 70, 18, is_admin ? "관리자 메인 메뉴" : "일반직원 메인 메뉴");
 
     if (is_admin)
