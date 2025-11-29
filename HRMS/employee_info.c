@@ -1,10 +1,10 @@
 /*
 담당자: 안도혁
-최근 업데이트: 2025.11.25 / 17:25
+최근 업데이트: 2025.11.29 / 21:45
 진행상태: 
 1-1 개인 정보 조회 기능 구현 완료
 1-2 직원 조회 기능 미구현 (추후 작업 예정)
-1-0 이전 메뉴로 기능 미구현 (추후 작업 예정)
+1-0 이전 메뉴로 기능 구현
 */
 
 #include "common.h"
@@ -42,7 +42,7 @@ set_color(15, 0); \
 draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, "1. 내 정보 / 직원 조회"); \
 draw_button(MENU_X, BTN_Y_1, "1. 개인 정보 조회", 0); \
 draw_button(MENU_X, BTN_Y_2, "2. 직원 조회 (미구현)", 0); \
-draw_button(MENU_X, BTN_Y_0, "0. 이전 메뉴로 (미구현)", 0); 
+draw_button(MENU_X, BTN_Y_0, "0. 이전 메뉴로", 0); 
 
 
 
@@ -126,7 +126,7 @@ void show_employee_info_menu(User* user)
                 printf(">> 1. 개인 정보 조회                 ");
                 set_color(15, 0);
 
-                Sleep(1000);
+                Sleep(500);
                 show_personal_info(user);
 
                 DRAW_SUB_MENU_UI(); //UI 재출력
@@ -139,7 +139,7 @@ void show_employee_info_menu(User* user)
                 printf(">> 2. 직원 조회                    ");
                 set_color(15, 0);
             }
-            // 0. 이전 메뉴로 (기능 미구현)
+            // 0. 이전 메뉴로
             else if (my == BTN_Y_0 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH)
             {
 
@@ -147,11 +147,9 @@ void show_employee_info_menu(User* user)
                 set_color(11, 0);
                 printf(">> 0. 이전 메뉴로                   ");
                 set_color(15, 0);
-                /*
-                Sleep(1000); // 1초 대기 후 복귀
-                DRAW_MAIN_MENU_UI(); //메인화면 UI 재출력
+
+                Sleep(500); // 0.5초 대기 후 복귀
                 return;
-                */
             }
         }
     }

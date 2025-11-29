@@ -9,6 +9,39 @@
 */
 #include "common.h"
 
+// 메인메뉴 UI만 불러오기(각 기능 함수호출 이후 이거 사용)
+#define MAIN_MENU_UI() \
+system("cls"); \
+set_color(0, 15); \
+gotoxy(0, 0); \
+for (int i = 0; i < 80; i++) printf(" "); \
+gotoxy(2, 0); \
+printf("컴공상사 HR System | 사용자: %s %s (%s)", user->name, user->position, user->department); \
+set_color(15, 0); \
+draw_box(box_x, box_y, 70, 18, is_admin ? "관리자 메인 메뉴" : "일반직원 메인 메뉴"); \
+if (is_admin) \
+{ \
+    draw_button(menu_x, 6, "1. 직원 데이터 관리", 0); \
+    draw_button(menu_x, 8, "2. 근태 관리       ", 0); \
+    draw_button(menu_x, 10, "3. 급여 관리       ", 0); \
+    draw_button(menu_x, 12, "4. 공지사항 관리   ", 0); \
+    draw_button(menu_x, 14, "5. 결재 관리       ", 0); \
+    draw_button(menu_x, 18, "0. 로그아웃        ", 0); \
+} \
+else \
+{ \
+    draw_button(menu_x, 6, "1. 내 정보 / 직원 조회", 0); \
+    draw_button(menu_x, 8, "2. 근태 관리          ", 0); \
+    draw_button(menu_x, 10, "3. 급여 / 평가        ", 0); \
+    draw_button(menu_x, 12, "4. 결재 처리          ", 0); \
+    draw_button(menu_x, 14, "5. 공지사항           ", 0); \
+    draw_button(menu_x, 18, "0. 로그아웃           ", 0); \
+} \
+HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE); \
+DWORD mode; \
+GetConsoleMode(hInput, &mode); \
+SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS); 
+
 // 메인 메뉴 화면 (기존과 동일)
 void show_main_menu(User* user)
 {
@@ -18,41 +51,8 @@ void show_main_menu(User* user)
     int box_x = 5, box_y = 3;
     int menu_x = 24;
 
-    system("cls");
-
-    set_color(0, 15);
-    gotoxy(0, 0);
-    for (int i = 0; i < 80; i++) printf(" ");
-    gotoxy(2, 0);
-    printf("컴공상사 HR System | 사용자: %s %s (%s)", user->name, user->position, user->department);
-    set_color(15, 0);
-    draw_box(box_x, box_y, 70, 18, is_admin ? "관리자 메인 메뉴" : "일반직원 메인 메뉴");
-
-    if (is_admin)
-    {
-        draw_button(menu_x, 6, "1. 직원 데이터 관리", 0);
-        draw_button(menu_x, 8, "2. 근태 관리       ", 0);
-        draw_button(menu_x, 10, "3. 급여 관리       ", 0);
-        draw_button(menu_x, 12, "4. 공지사항 관리   ", 0);
-        draw_button(menu_x, 14, "5. 결재 관리       ", 0);
-        draw_button(menu_x, 18, "0. 로그아웃        ", 0);
-    }
-    else
-    {
-        draw_button(menu_x, 6, "1. 내 정보 / 직원 조회", 0);
-        draw_button(menu_x, 8, "2. 근태 관리          ", 0);
-        draw_button(menu_x, 10, "3. 급여 / 평가        ", 0);
-        draw_button(menu_x, 12, "4. 결재 처리          ", 0);
-        draw_button(menu_x, 14, "5. 공지사항           ", 0);
-        draw_button(menu_x, 18, "0. 로그아웃           ", 0);
-    }
-
-    //재설정 안해주면 클릭 이벤트 작동안함
-    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
-
-    DWORD mode;
-    GetConsoleMode(hInput, &mode);
-    SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+    // 최소 실행시 UI 띄우기
+    MAIN_MENU_UI();
 
     while (1) {
         if (get_mouse_click(&mx, &my)) {
@@ -86,8 +86,9 @@ void show_main_menu(User* user)
                     else // 직원: 1. 내 정보 / 직원 조회
                     {
                         printf(">> [직원] 내 정보 / 직원 조회 기능 실행  ");
-                        Sleep(1000);
+                        Sleep(500);
                         show_employee_info_menu(user); //작업자 안도혁
+                        MAIN_MENU_UI();
                     }
                     break;
 
@@ -95,7 +96,7 @@ void show_main_menu(User* user)
                     printf(">> [공통] 근태 관리 기능 실행            ");
                     Sleep(700);
                     attendance_menu(user); // 근태 관리 연결
-					system("cls");
+                    MAIN_MENU_UI();
                     break;
 
                 case 10: // 관리자: 3. 급여 관리

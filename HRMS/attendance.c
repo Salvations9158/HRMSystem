@@ -328,7 +328,6 @@ void attendance_menu(User* user) {
 
         // 이전 메뉴로
         else if (my == BTN_Y_0 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
-            show_main_menu(user); // 다른 메뉴로 이동
             return;
         }
     }
