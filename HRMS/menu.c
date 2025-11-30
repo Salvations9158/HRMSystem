@@ -27,7 +27,7 @@ if (is_admin) \
     draw_button(menu_x, 12, "4. 공지사항 관리   ", 0); \
     draw_button(menu_x, 14, "5. 결재 관리       ", 0); \
     draw_button(menu_x, 18, "0. 로그아웃        ", 0); \
-} \
+} \ 
 else \
 { \
     draw_button(menu_x, 6, "1. 내 정보 / 직원 조회", 0); \
@@ -104,11 +104,13 @@ void show_main_menu(User* user)
                     {
                         printf(">> [관리자] 급여 관리 기능 실행          ");
                         //여기다가 작업
+                        
                     }
                     else // 직원: 3. 급여 / 급여 평가
                     {
                         printf(">> [직원] 급여 / 평가 기능 실행          ");
                         //여기다가 작업
+                        
                     }
                     break;
 
