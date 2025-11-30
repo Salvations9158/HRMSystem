@@ -33,9 +33,6 @@
     <ClCompile Include="attendance.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="evaluation.c">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
