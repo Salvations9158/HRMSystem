@@ -81,7 +81,9 @@ void show_main_menu(User* user)
                     if (is_admin)
                     {
                         printf(">> [관리자] 직원 데이터 관리 기능 실행   ");
-                        //여기다가 작업
+                        Sleep(500);
+                        show_admin_info_menu(user); //작업자 안도혁
+                        MAIN_MENU_UI();
                     }
                     else // 직원: 1. 내 정보 / 직원 조회
                     {

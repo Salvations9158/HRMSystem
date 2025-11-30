@@ -21,8 +21,8 @@ void create_dummy_data()
         err = fopen_s(&fp, "User.txt", "w");
         if (err == 0 && fp != NULL)
         {
-            fprintf(fp, "admin 1234 전민규 관리팀 관리자 010-1111-2222 2010-01-01\n");
-            fprintf(fp, "worker01 1234 안도혁 개발팀 대리 010-1234-5678 2025-11-01\n");
+            fprintf(fp, "admin 1234 전민규 관리팀 관리자 010-1111-2222 2010-01-01 4000000\n");
+            fprintf(fp, "worker01 1234 안도혁 개발팀 대리 010-1234-5678 2025-11-01 3000000\n");
             printf("초기 데이터 파일(User.txt)을 생성했습니다.\n");
             fclose(fp);
         }

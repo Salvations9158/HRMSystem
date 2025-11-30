@@ -123,6 +123,7 @@ void find_account_process();           //계정(PW) 찾기 프로세스 수행
 
 void show_main_menu(User* user);            // 로그인 이후 메인 메뉴 (관리자/직원 분기)
 void show_employee_info_menu(User* user);   // 직원 정보 조회 메뉴
+void show_admin_info_menu(User* user);      // 관리자 직원 데이터 관리 메뉴
 
 
 #endif
