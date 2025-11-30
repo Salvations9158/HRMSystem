@@ -1,12 +1,16 @@
 /*
 담당자: 전민규
-최근 업데이트: 2025.12.01 / 02:25
+최근 업데이트: 2025.12.01
 진행상태:
-1-1 결재 기능 구현 완료
-1-2 아직 전체적으로 결재가 늘어났을때 유동적인 ui처리가 미흡함 (추후 개선 예정)
+1-1 결재 기능 구현 완료 (페이지 적용)
+1-2 static 제거 및 외부 참조 가능하도록 변경
+1-3 페이지당 표시 개수 5개로 변경 (UI 최적화)
 */
 
 #include "common.h"
+
+#define MAX_LOAD_COUNT 100 // 최대 로드 개수
+#define ITEMS_PER_PAGE 5   // 페이지당 표시 개수를 5개로 변경 (UI 박스 크기 고려)
 
 // 결재 더미 데이터 생성
 void create_dummy_approval_data()
@@ -19,6 +23,9 @@ void create_dummy_approval_data()
             fprintf(fp, "1 worker01 연차신청 개인사정 대기 2025-11-25\n");
             fprintf(fp, "2 worker01 비품구매 모니터구매 대기 2025-11-26\n");
             fprintf(fp, "3 admin 출장신청 본사출장 대기 2025-11-27\n");
+            // 페이지 테스트용
+            for (int i = 4; i <= 15; i++) fprintf(fp, "%d worker01 테스트%d 내용%d 대기 2025-11-28\n", i, i, i);
+
             printf("시스템: 초기 결재 데이터를 생성했습니다.\n");
             fclose(fp);
         }
@@ -38,7 +45,6 @@ int get_next_approval_no()
         while (fgets(line, sizeof(line), fp) != NULL)
         {
             int no = 0;
-            // 한 줄의 맨 앞에서 정수 하나만 읽어옴
             if (sscanf_s(line, "%d", &no) == 1)
             {
                 if (no > max_no) max_no = no;
@@ -46,7 +52,6 @@ int get_next_approval_no()
         }
         fclose(fp);
     }
-
     return max_no + 1;
 }
 
@@ -77,7 +82,6 @@ void get_user_dept_approval(char* user_id, char* dept_buf)
 }
 
 // 결재 상태 변경 및 삭제 공통 함수
-// new_status가 "DELETE"면 삭제, 아니면 상태값 변경
 void update_approval_action(int target_no, char* new_status)
 {
     FILE* fp = NULL;
@@ -94,7 +98,7 @@ void update_approval_action(int target_no, char* new_status)
                 temp.status, (unsigned)sizeof(temp.status), temp.date, (unsigned)sizeof(temp.date)) != EOF)
             {
                 if (temp.no == target_no) {
-                    if (strcmp(new_status, "DELETE") == 0) continue; // 삭제 시 파일에 쓰지 않고 건너뜀
+                    if (strcmp(new_status, "DELETE") == 0) continue; // 삭제
                     fprintf(tfp, "%d %s %s %s %s %s\n", temp.no, temp.drafter_id, temp.type, temp.content, new_status, temp.date);
                 }
                 else {
@@ -110,86 +114,127 @@ void update_approval_action(int target_no, char* new_status)
 }
 
 // -----------------------------------------------------------
-// 1. 관리자 모드: 전체 조회 및 삭제
+// 1. 관리자 모드: 전체 조회 및 삭제 
 // -----------------------------------------------------------
 void admin_approval_main()
 {
     int mx, my;
     int list_y_start = 7;
-    int shown_nos[10] = { 0, };
-    int shown_count = 0;
+
+    // 힙 메모리 사용 (동적 할당)
+    Approval* list = (Approval*)malloc(sizeof(Approval) * MAX_LOAD_COUNT);
+    if (list == NULL) {
+        printf("메모리 할당 실패\n");
+        return;
+    }
+
+    int total_count = 0;
+    int current_page = 1;
+    int total_pages = 1;
 
     create_dummy_approval_data();
 
-    // 화면 그리기 (루프 밖으로 이동)
-    system("cls");
-    draw_box(5, 3, 70, 18, "관리자 결재 현황 (전체)");
-    gotoxy(7, 6); printf("NO  | 기안자   | 종류       | 상태 | 관리");
-    gotoxy(7, 6); printf("----------------------------------------------------------");
-
-    // 파일 읽기 및 출력 (한 번만 실행)
-    FILE* fp = NULL;
-    Approval app;
-    shown_count = 0;
-
-    if (fopen_s(&fp, "Approval.txt", "r") == 0 && fp != NULL)
+    while (1)
     {
-        while (fscanf_s(fp, "%d %s %s %s %s %s",
-            &app.no, app.drafter_id, (unsigned)sizeof(app.drafter_id),
-            app.type, (unsigned)sizeof(app.type), app.content, (unsigned)sizeof(app.content),
-            app.status, (unsigned)sizeof(app.status), app.date, (unsigned)sizeof(app.date)) != EOF)
+        // 데이터 로드
+        FILE* fp = NULL;
+        Approval temp;
+        total_count = 0;
+
+        if (fopen_s(&fp, "Approval.txt", "r") == 0 && fp != NULL)
         {
-            if (shown_count < 10) {
-                gotoxy(7, list_y_start + (shown_count * 2));
-                printf("%-3d | %-8s | %-10s | %s", app.no, app.drafter_id, app.type, app.status);
-
-                // 관리자는 '삭제'만 가능
-                draw_button(50, list_y_start + (shown_count * 2), "삭제", 0);
-
-                shown_nos[shown_count++] = app.no;
+            while (fscanf_s(fp, "%d %s %s %s %s %s",
+                &temp.no, temp.drafter_id, (unsigned)sizeof(temp.drafter_id),
+                temp.type, (unsigned)sizeof(temp.type), temp.content, (unsigned)sizeof(temp.content),
+                temp.status, (unsigned)sizeof(temp.status), temp.date, (unsigned)sizeof(temp.date)) != EOF)
+            {
+                if (total_count < MAX_LOAD_COUNT) list[total_count++] = temp;
             }
+            fclose(fp);
         }
-        fclose(fp);
-    }
 
-    draw_button(30, 18, "나가기", 0);
+        // 페이지 수 계산 (5개 단위)
+        if (total_count == 0) total_pages = 1;
+        else total_pages = (total_count - 1) / ITEMS_PER_PAGE + 1;
 
-    // 마우스 모드 재설정 (루프 진입 전)
-    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
-    FlushConsoleInputBuffer(hInput);
-    DWORD mode;
-    GetConsoleMode(hInput, &mode);
-    SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+        if (current_page > total_pages) current_page = total_pages;
+        if (current_page < 1) current_page = 1;
 
-    int loop = 1;
-    while (loop) {
-        if (get_mouse_click(&mx, &my)) {
-            if (my == 18 && mx >= 30 && mx <= 40) return;
+        // UI 그리기
+        system("cls");
+        draw_box(5, 3, 70, 18, "관리자 결재 현황 (전체)");
+        gotoxy(7, 6); printf("NO  | 기안자   | 종류       | 상태 | 관리");
+        gotoxy(7, 6); printf("----------------------------------------------------------");
 
-            for (int i = 0; i < shown_count; i++) {
-                if (my == list_y_start + (i * 2) && mx >= 50 && mx <= 58) {
-                    update_approval_action(shown_nos[i], "DELETE");
+        int start_idx = (current_page - 1) * ITEMS_PER_PAGE;
+        int end_idx = start_idx + ITEMS_PER_PAGE;
+        if (end_idx > total_count) end_idx = total_count;
+
+        int display_idx = 0;
+        for (int i = start_idx; i < end_idx; i++) {
+            gotoxy(7, list_y_start + (display_idx * 2));
+            printf("%-3d | %-8s | %-10s | %s", list[i].no, list[i].drafter_id, list[i].type, list[i].status);
+            draw_button(50, list_y_start + (display_idx * 2), "삭제", 0);
+            display_idx++;
+        }
+
+        draw_button(30, 18, "나가기", 0);
+
+        // 페이지 네비게이션 버튼 표시
+        if (current_page > 1) draw_button(10, 18, "< 이전", 0);
+        if (current_page < total_pages) draw_button(60, 18, "다음 >", 0);
+
+        gotoxy(38, 5); set_color(14, 0); printf("Page %d / %d", current_page, total_pages); set_color(15, 0);
+
+        HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+        FlushConsoleInputBuffer(hInput);
+        DWORD mode; GetConsoleMode(hInput, &mode);
+        SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+
+        int clicked = 0;
+        while (!clicked) {
+            if (get_mouse_click(&mx, &my)) clicked = 1;
+        }
+
+        if (clicked) {
+            // 나가기
+            if (my == 18 && mx >= 30 && mx <= 40) {
+                free(list);
+                return;
+            }
+            // 이전 페이지
+            if (current_page > 1 && my == 18 && mx >= 10 && mx <= 20) {
+                current_page--;
+                continue;
+            }
+            // 다음 페이지
+            if (current_page < total_pages && my == 18 && mx >= 60 && mx <= 70) {
+                current_page++;
+                continue;
+            }
+
+            // 삭제 버튼 클릭
+            display_idx = 0;
+            for (int i = start_idx; i < end_idx; i++) {
+                if (my == list_y_start + (display_idx * 2) && mx >= 50 && mx <= 58) {
+                    update_approval_action(list[i].no, "DELETE");
                     gotoxy(20, 16); set_color(12, 0); printf(">> 결재 내역이 삭제되었습니다."); set_color(15, 0);
-                    Sleep(800);
-                    // 삭제 후 화면 갱신을 위해 재귀 호출 또는 루프 재시작 필요하나, 
-                    // 구조상 간단히 함수 종료 후 재진입 유도 (또는 화면 지우고 다시 그리기)
-                    loop = 0; // 루프 종료 -> 함수 종료 -> 메뉴에서 다시 호출됨 (구조에 따라 다름)
-                    // 여기서는 함수를 끝내고 메뉴로 돌아가게 처리 (사용자가 다시 들어오도록)
-                    break;
+                    Sleep(800); break;
                 }
+                display_idx++;
             }
         }
     }
-    // 삭제 후 바로 갱신된 화면을 보여주고 싶다면 admin_approval_main()을 다시 호출
-    if (loop == 0) admin_approval_main();
+    free(list);
 }
 
 // -----------------------------------------------------------
-// 2. 직원 모드 (부장 포함): 신청, 조회, (부장)승인
+// 2. 직원/부장 모드 함수들 
 // -----------------------------------------------------------
 
-// [내부 함수] 결재 신청 화면
-void process_request(User* user) {
+// 결재 신청 화면
+void process_request(User* user)
+{
     int mx, my;
     char input_type[20] = "", input_content[100] = "", input_date[15] = "";
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -226,14 +271,11 @@ void process_request(User* user) {
     while (1) {
         if (get_mouse_click(&mx, &my)) {
             if (my == box_y + 13) {
-                // [신청하기] 버튼 클릭 시
                 if (mx >= box_x + 10 && mx <= box_x + 20) {
-
-                    // [수정 핵심] 파일을 열기 전에 먼저 번호를 생성해서 가져옵니다.
+                    //파일을 열기 전에 번호를 먼저 받아옴
                     int next_no = get_next_approval_no();
 
                     FILE* fp = NULL;
-                    // 그 다음 파일을 열어 저장합니다.
                     if (fopen_s(&fp, "Approval.txt", "a") == 0 && fp != NULL) {
                         fprintf(fp, "%d %s %s %s 대기 %s\n", next_no, user->id, input_type, input_content, input_date);
                         fclose(fp);
@@ -246,99 +288,182 @@ void process_request(User* user) {
     }
 }
 
-// [내부 함수] 본인 결재 현황 조회
-void employee_view_status(User* user) {
+// 본인 결재 현황 조회
+void employee_view_status(User* user)
+{
     int mx, my;
-    int list_y_start = 7, shown_count = 0;
+    int list_y_start = 7;
 
-    // 화면 그리기 (루프 밖)
-    system("cls");
-    draw_box(5, 3, 70, 18, "내 결재 신청 현황");
-    gotoxy(7, 6); printf("NO  | 종류       | 날짜       | 상태");
-    gotoxy(7, 6); printf("----------------------------------------------------------");
-
-    FILE* fp = NULL; Approval app; shown_count = 0;
-    if (fopen_s(&fp, "Approval.txt", "r") == 0 && fp != NULL) {
-        while (fscanf_s(fp, "%d %s %s %s %s %s", &app.no, app.drafter_id, (unsigned)sizeof(app.drafter_id), app.type, (unsigned)sizeof(app.type), app.content, (unsigned)sizeof(app.content), app.status, (unsigned)sizeof(app.status), app.date, (unsigned)sizeof(app.date)) != EOF) {
-            if (strcmp(app.drafter_id, user->id) == 0 && shown_count < 10) {
-                gotoxy(7, list_y_start + (shown_count * 2));
-                if (strcmp(app.status, "승인") == 0) set_color(11, 0);
-                else if (strcmp(app.status, "반려") == 0) set_color(12, 0);
-                printf("%-3d | %-10s | %-10s | %s", app.no, app.type, app.date, app.status);
-                set_color(15, 0);
-                shown_count++;
-            }
-        }
-        fclose(fp);
+    Approval* list = (Approval*)malloc(sizeof(Approval) * MAX_LOAD_COUNT);
+    if (list == NULL) {
+        printf("메모리 할당 실패\n");
+        return;
     }
-    draw_button(30, 18, "뒤로가기", 0);
 
-    // 마우스 모드 설정
-    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
-    FlushConsoleInputBuffer(hInput);
-    DWORD mode; GetConsoleMode(hInput, &mode);
-    SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+    int total_count = 0;
+    int current_page = 1;
+    int total_pages = 1;
 
     while (1) {
-        if (get_mouse_click(&mx, &my)) {
-            if (my == 18 && mx >= 30 && mx <= 40) return;
+        FILE* fp = NULL; Approval temp; total_count = 0;
+        if (fopen_s(&fp, "Approval.txt", "r") == 0 && fp != NULL) {
+            while (fscanf_s(fp, "%d %s %s %s %s %s", &temp.no, temp.drafter_id, (unsigned)sizeof(temp.drafter_id), temp.type, (unsigned)sizeof(temp.type), temp.content, (unsigned)sizeof(temp.content), temp.status, (unsigned)sizeof(temp.status), temp.date, (unsigned)sizeof(temp.date)) != EOF) {
+                if (strcmp(temp.drafter_id, user->id) == 0 && total_count < MAX_LOAD_COUNT) {
+                    list[total_count++] = temp;
+                }
+            }
+            fclose(fp);
+        }
+
+        if (total_count == 0) total_pages = 1;
+        else total_pages = (total_count - 1) / ITEMS_PER_PAGE + 1;
+        if (current_page > total_pages) current_page = total_pages;
+        if (current_page < 1) current_page = 1;
+
+        system("cls");
+        draw_box(5, 3, 70, 18, "내 결재 신청 현황");
+        gotoxy(7, 6); printf("NO  | 종류       | 날짜       | 상태");
+        gotoxy(7, 6); printf("----------------------------------------------------------");
+
+        int start_idx = (current_page - 1) * ITEMS_PER_PAGE;
+        int end_idx = start_idx + ITEMS_PER_PAGE;
+        if (end_idx > total_count) end_idx = total_count;
+
+        int display_idx = 0;
+        for (int i = start_idx; i < end_idx; i++) {
+            gotoxy(7, list_y_start + (display_idx * 2));
+            if (strcmp(list[i].status, "승인") == 0) set_color(11, 0);
+            else if (strcmp(list[i].status, "반려") == 0) set_color(12, 0);
+            printf("%-3d | %-10s | %-10s | %s", list[i].no, list[i].type, list[i].date, list[i].status);
+            set_color(15, 0);
+            display_idx++;
+        }
+
+        draw_button(30, 18, "뒤로가기", 0);
+        if (current_page > 1) draw_button(10, 18, "< 이전", 0);
+        if (current_page < total_pages) draw_button(60, 18, "다음 >", 0);
+        gotoxy(38, 5); set_color(14, 0); printf("Page %d / %d", current_page, total_pages); set_color(15, 0);
+
+        HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+        FlushConsoleInputBuffer(hInput);
+        DWORD mode; GetConsoleMode(hInput, &mode);
+        SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+
+        int clicked = 0;
+        while (!clicked) {
+            if (get_mouse_click(&mx, &my)) clicked = 1;
+        }
+
+        if (clicked) {
+            if (my == 18 && mx >= 30 && mx <= 40) {
+                free(list);
+                return;
+            }
+            if (current_page > 1 && my == 18 && mx >= 10 && mx <= 20) { current_page--; continue; }
+            if (current_page < total_pages && my == 18 && mx >= 60 && mx <= 70) { current_page++; continue; }
         }
     }
+    free(list);
 }
 
-// [내부 함수] 부장 전용 승인/반려 프로세스
-void manager_approve_process(User* manager) {
+// 부장 전용 승인/반려 프로세스
+void manager_approve_process(User* manager)
+{
     int mx, my;
-    int list_y_start = 7, shown_nos[10] = { 0, }, shown_count = 0;
+    int list_y_start = 7;
 
-    system("cls");
-    draw_box(5, 3, 70, 18, "부서 결재 승인/반려");
-    gotoxy(7, 5); set_color(11, 0); printf("[%s] 대기 상태 결재 목록", manager->department); set_color(15, 0);
-    gotoxy(7, 6); printf("NO  | 기안자   | 종류       | 상태");
-    gotoxy(7, 6); printf("----------------------------------------------------------");
+    Approval* list = (Approval*)malloc(sizeof(Approval) * MAX_LOAD_COUNT);
+    if (list == NULL) {
+        printf("메모리 할당 실패\n");
+        return;
+    }
 
-    FILE* fp = NULL; Approval app; char drafter_dept[20]; shown_count = 0;
-    if (fopen_s(&fp, "Approval.txt", "r") == 0 && fp != NULL) {
-        while (fscanf_s(fp, "%d %s %s %s %s %s", &app.no, app.drafter_id, (unsigned)sizeof(app.drafter_id), app.type, (unsigned)sizeof(app.type), app.content, (unsigned)sizeof(app.content), app.status, (unsigned)sizeof(app.status), app.date, (unsigned)sizeof(app.date)) != EOF) {
-            if (strcmp(app.status, "대기") == 0) {
-                get_user_dept_approval(app.drafter_id, drafter_dept);
-                if (strcmp(manager->department, drafter_dept) == 0 && shown_count < 10) {
-                    gotoxy(7, list_y_start + (shown_count * 2));
-                    printf("%-3d | %-8s | %-10s | %s", app.no, app.drafter_id, app.type, app.status);
-                    draw_button(50, list_y_start + (shown_count * 2), "승인", 0);
-                    draw_button(58, list_y_start + (shown_count * 2), "반려", 0);
-                    shown_nos[shown_count++] = app.no;
+    int total_count = 0;
+    int current_page = 1;
+    int total_pages = 1;
+
+    while (1) {
+        FILE* fp = NULL; Approval temp; char drafter_dept[20];
+        total_count = 0;
+
+        if (fopen_s(&fp, "Approval.txt", "r") == 0 && fp != NULL) {
+            while (fscanf_s(fp, "%d %s %s %s %s %s", &temp.no, temp.drafter_id, (unsigned)sizeof(temp.drafter_id), temp.type, (unsigned)sizeof(temp.type), temp.content, (unsigned)sizeof(temp.content), temp.status, (unsigned)sizeof(temp.status), temp.date, (unsigned)sizeof(temp.date)) != EOF) {
+                if (strcmp(temp.status, "대기") == 0) {
+                    get_user_dept_approval(temp.drafter_id, drafter_dept);
+                    if (strcmp(manager->department, drafter_dept) == 0 && total_count < MAX_LOAD_COUNT) {
+                        list[total_count++] = temp;
+                    }
                 }
             }
+            fclose(fp);
         }
-        fclose(fp);
-    }
-    if (shown_count == 0) { gotoxy(20, 10); printf("처리할 대기 결재가 없습니다."); }
-    draw_button(30, 18, "나가기", 0);
 
-    // 마우스 모드 설정
-    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
-    FlushConsoleInputBuffer(hInput);
-    DWORD mode; GetConsoleMode(hInput, &mode);
-    SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+        if (total_count == 0) total_pages = 1;
+        else total_pages = (total_count - 1) / ITEMS_PER_PAGE + 1;
+        if (current_page > total_pages) current_page = total_pages;
+        if (current_page < 1) current_page = 1;
 
-    int loop = 1;
-    while (loop) {
-        if (get_mouse_click(&mx, &my)) {
-            if (my == 18 && mx >= 30 && mx <= 40) return;
-            for (int i = 0; i < shown_count; i++) {
-                if (my == list_y_start + (i * 2)) {
-                    if (mx >= 50 && mx <= 56) { update_approval_action(shown_nos[i], "승인"); loop = 0; break; }
-                    else if (mx >= 58 && mx <= 64) { update_approval_action(shown_nos[i], "반려"); loop = 0; break; }
+        system("cls");
+        draw_box(5, 3, 70, 18, "부서 결재 승인/반려");
+        gotoxy(7, 5); set_color(11, 0); printf("[%s] 대기 상태 결재 목록", manager->department); set_color(15, 0);
+        gotoxy(7, 6); printf("NO  | 기안자   | 종류       | 상태");
+        gotoxy(7, 6); printf("----------------------------------------------------------");
+
+        int start_idx = (current_page - 1) * ITEMS_PER_PAGE;
+        int end_idx = start_idx + ITEMS_PER_PAGE;
+        if (end_idx > total_count) end_idx = total_count;
+
+        int display_idx = 0;
+        for (int i = start_idx; i < end_idx; i++) {
+            gotoxy(7, list_y_start + (display_idx * 2));
+            printf("%-3d | %-8s | %-10s | %s", list[i].no, list[i].drafter_id, list[i].type, list[i].status);
+            draw_button(50, list_y_start + (display_idx * 2), "승인", 0);
+            draw_button(58, list_y_start + (display_idx * 2), "반려", 0);
+            display_idx++;
+        }
+
+        if (total_count == 0) { gotoxy(20, 10); printf("처리할 대기 결재가 없습니다."); }
+
+        draw_button(30, 18, "나가기", 0);
+        if (current_page > 1) draw_button(10, 18, "< 이전", 0);
+        if (current_page < total_pages) draw_button(60, 18, "다음 >", 0);
+        gotoxy(38, 5); set_color(14, 0); printf("Page %d / %d", current_page, total_pages); set_color(15, 0);
+
+        HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+        FlushConsoleInputBuffer(hInput);
+        DWORD mode; GetConsoleMode(hInput, &mode);
+        SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+
+        int clicked = 0;
+        while (!clicked) {
+            if (get_mouse_click(&mx, &my)) clicked = 1;
+        }
+
+        if (clicked) {
+            if (my == 18 && mx >= 30 && mx <= 40) {
+                free(list);
+                return;
+            }
+            if (current_page > 1 && my == 18 && mx >= 10 && mx <= 20) { current_page--; continue; }
+            if (current_page < total_pages && my == 18 && mx >= 60 && mx <= 70) { current_page++; continue; }
+
+            display_idx = 0;
+            for (int i = start_idx; i < end_idx; i++) {
+                int y = list_y_start + (display_idx * 2);
+                if (my == y) {
+                    if (mx >= 50 && mx <= 56) { update_approval_action(list[i].no, "승인"); Sleep(500); break; }
+                    else if (mx >= 58 && mx <= 64) { update_approval_action(list[i].no, "반려"); Sleep(500); break; }
                 }
+                display_idx++;
             }
         }
     }
-    if (loop == 0) manager_approve_process(manager); // 처리 후 화면 갱신
+    free(list);
 }
 
-// [메인 진입점] 직원 결재 메뉴 (부장 기능 포함)
-void employee_approval_main(User* user) {
+// [메인 진입점] 직원 결재 메뉴
+void employee_approval_main(User* user)
+{
     int mx, my, box_x = 20, box_y = 8;
     int is_manager = (strcmp(user->position, "부장") == 0); // 부장 확인
 
@@ -348,7 +473,6 @@ void employee_approval_main(User* user) {
         draw_button(box_x + 10, box_y + 3, "1. 결재 신청", 0);
         draw_button(box_x + 10, box_y + 5, "2. 결재 현황", 0);
 
-        // 부장만 보이는 히든 메뉴
         if (is_manager) {
             set_color(11, 0);
             draw_button(box_x + 10, box_y + 7, "3. 부서 결재 관리", 0);
@@ -359,13 +483,11 @@ void employee_approval_main(User* user) {
             draw_button(box_x + 10, box_y + 7, "0. 뒤로 가기", 0);
         }
 
-        // 마우스 모드 설정
         HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
         FlushConsoleInputBuffer(hInput);
         DWORD mode; GetConsoleMode(hInput, &mode);
         SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
 
-        // 루프 내에서 클릭 대기
         int clicked = 0;
         while (!clicked) {
             if (get_mouse_click(&mx, &my)) clicked = 1;
