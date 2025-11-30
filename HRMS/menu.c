@@ -123,7 +123,9 @@ void show_main_menu(User* user)
                     else // 직원: 4. 결재 처리
                     {
                         printf(">> [직원] 결재 처리 기능 실행            ");
-                        //여기다가 작업
+                        Sleep(500);
+                        employee_approval_main(user);
+                        MAIN_MENU_UI();
                     }
                     break;
 
@@ -131,7 +133,9 @@ void show_main_menu(User* user)
                     if (is_admin)
                     {
                         printf(">> [관리자] 결재 관리 기능 실행          ");
-                        //여기다가 작업
+                        Sleep(500);
+                        admin_approval_main();
+                        MAIN_MENU_UI();
                     }
                     else // 직원: 5. 공지사항
                     {

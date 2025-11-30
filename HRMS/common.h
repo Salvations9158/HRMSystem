@@ -28,6 +28,20 @@ typedef struct
     int salary;          // 봉급
 } User;
 
+// -----------------------------------------------------
+// 결재 정보 구조체
+// - 결재 신청 및 승인 관리에 사용
+// -----------------------------------------------------
+typedef struct
+{
+    int no;              // 결재 번호
+    char drafter_id[20]; // 기안자 ID
+    char type[20];       // 종류
+    char content[100];   // 내용
+    char status[10];     // 상태 (대기, 승인, 반려)
+    char date[15];       // 기안일
+} Approval;
+
 
 // -----------------------------------------------------
 // Evaluation 구조체: 인사 평가 데이터
@@ -124,6 +138,14 @@ void find_account_process();           //계정(PW) 찾기 프로세스 수행
 void show_main_menu(User* user);            // 로그인 이후 메인 메뉴 (관리자/직원 분기)
 void show_employee_info_menu(User* user);   // 직원 정보 조회 메뉴
 void show_admin_info_menu(User* user);      // 관리자 직원 데이터 관리 메뉴
+
+// =====================================================
+// 결재 관련 함수
+// =====================================================
+
+void admin_approval_main();               // 관리자 결재 메뉴
+void employee_approval_main(User* user);  // 직원 결재 메뉴
+void create_dummy_approval_data();        // 테스트용 임시 결재 데이터 생성
 
 
 #endif

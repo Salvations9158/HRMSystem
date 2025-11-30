@@ -100,7 +100,7 @@ int login_process(User* login_user)
     printf(">> [로그인] 버튼을 눌러주세요.");
     set_color(15, 0);
 
-    // [중요******] 입력 버퍼 비우기 & 마우스 모드 재설정
+    // 입력 버퍼 비우기 & 마우스 모드 재설정
     // scanf 사용 후 남아있을 수 있는 엔터 키 이벤트 등을 제거합니다.
     FlushConsoleInputBuffer(hInput);
 
