@@ -105,13 +105,17 @@ void show_main_menu(User* user)
                     if (is_admin)
                     {
                         printf(">> [관리자] 급여 관리 기능 실행          ");
-                        //여기다가 작업
+						Sleep(500);
+                        run_salary_eval_admin(user);
+                        MAIN_MENU_UI();
                     }
                     else // 직원: 3. 급여 / 급여 평가
                     {
                         printf(">> [직원] 급여 / 평가 기능 실행          ");
-                        //여기다가 작업
-                    }
+						Sleep(500);
+                        input_team_evaluation(user);
+
+                    }   
                     break;
 
                 case 12: // 관리자: 4. 공지사항 관리
