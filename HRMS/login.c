@@ -1,6 +1,6 @@
 /*
 담당자: 전민규
-최근 업데이트: 2025.11.28 / 12:57
+최근 업데이트: 2025.12.01 / 12:11
 진행상태:
 1-0 'User.txt' 파일이 없을 경우 더미 데이터 생성 기능 구현 완료
 1-1 로그인 프로세스 기능 구현 완료
@@ -14,13 +14,14 @@ void create_dummy_data()
     FILE* fp = NULL;
     errno_t err;
 
-    err = fopen_s(&fp, "Users.txt", "r");
+    err = fopen_s(&fp, "User.txt", "r");
 
     if (err != 0 || fp == NULL)
     {
         err = fopen_s(&fp, "User.txt", "w");
         if (err == 0 && fp != NULL)
         {
+            // 연봉 데이터 포함하여 저장
             fprintf(fp, "admin 1234 전민규 관리팀 관리자 010-1111-2222 2010-01-01 4000000\n");
             fprintf(fp, "worker01 1234 안도혁 개발팀 대리 010-1234-5678 2025-11-01 3000000\n");
             printf("초기 데이터 파일(User.txt)을 생성했습니다.\n");
@@ -165,14 +166,16 @@ int login_process(User* login_user)
 
                 if (fopen_s(&fp, "User.txt", "r") == 0 && fp != NULL)
                 {
-                    while (fscanf_s(fp, "%s %s %s %s %s %s %s",
+                    // 연봉(%d) 추가하여 읽기 형식 맞춤
+                    while (fscanf_s(fp, "%s %s %s %s %s %s %s %d",
                         temp.id, (unsigned)sizeof(temp.id),
                         temp.pw, (unsigned)sizeof(temp.pw),
                         temp.name, (unsigned)sizeof(temp.name),
                         temp.department, (unsigned)sizeof(temp.department),
                         temp.position, (unsigned)sizeof(temp.position),
                         temp.phone, (unsigned)sizeof(temp.phone),
-                        temp.hire_date, (unsigned)sizeof(temp.hire_date)) != EOF)
+                        temp.hire_date, (unsigned)sizeof(temp.hire_date),
+                        &temp.salary) != EOF)
                     {
 
                         if (strcmp(temp.id, input_id) == 0 && strcmp(temp.pw, input_pw) == 0)
@@ -288,14 +291,16 @@ void find_account_process()
 
     if (fopen_s(&fp, "User.txt", "r") == 0 && fp != NULL)
     {
-        while (fscanf_s(fp, "%s %s %s %s %s %s %s",
+        // [수정] 연봉(%d) 추가하여 읽기 형식 맞춤
+        while (fscanf_s(fp, "%s %s %s %s %s %s %s %d",
             temp.id, (unsigned)sizeof(temp.id),
             temp.pw, (unsigned)sizeof(temp.pw),
             temp.name, (unsigned)sizeof(temp.name),
             temp.department, (unsigned)sizeof(temp.department),
             temp.position, (unsigned)sizeof(temp.position),
             temp.phone, (unsigned)sizeof(temp.phone),
-            temp.hire_date, (unsigned)sizeof(temp.hire_date)) != EOF)
+            temp.hire_date, (unsigned)sizeof(temp.hire_date),
+            &temp.salary) != EOF)
         {
             if (strcmp(temp.id, input_search_id) == 0)
             {
@@ -372,14 +377,16 @@ void find_account_process()
 
                 if (fopen_s(&fp, "User.txt", "r") == 0 && fp != NULL)
                 {
-                    while (fscanf_s(fp, "%s %s %s %s %s %s %s",
+                    // [수정] 연봉(%d) 추가하여 읽기 형식 맞춤
+                    while (fscanf_s(fp, "%s %s %s %s %s %s %s %d",
                         temp.id, (unsigned)sizeof(temp.id),
                         temp.pw, (unsigned)sizeof(temp.pw),
                         temp.name, (unsigned)sizeof(temp.name),
                         temp.department, (unsigned)sizeof(temp.department),
                         temp.position, (unsigned)sizeof(temp.position),
                         temp.phone, (unsigned)sizeof(temp.phone),
-                        temp.hire_date, (unsigned)sizeof(temp.hire_date)) != EOF)
+                        temp.hire_date, (unsigned)sizeof(temp.hire_date),
+                        &temp.salary) != EOF)
                     {
                         if (strcmp(temp.id, input_search_id) == 0)
                         {
