@@ -45,7 +45,7 @@ printf("컴공상사 HR System | 관리자: %s %s (%s)", user->name, user->position, us
 set_color(15, 0); \
 draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, "1. 직원 데이터 관리"); \
 draw_button(MENU_X, BTN_Y_1, "1. 직원 등록", 0); \
-draw_button(MENU_X, BTN_Y_2, "2. 직원 수정", 0); \
+draw_button(MENU_X, BTN_Y_2, "2. 직원 수정/삭제", 0); \
 draw_button(MENU_X, BTN_Y_3, "3. 직원 검색", 0); \
 draw_button(MENU_X, BTN_Y_0, "0. 이전 메뉴로", 0); 
 
@@ -229,11 +229,11 @@ void edit_employee(User* user) {
     for (int i = 0; i < 80; i++) printf(" ");
     gotoxy(2, 0);
     printf("컴공상사 HR System | 사용자: %s %s (%s)", user->name, user->position, user->department);
-    draw_box(INFO_BOX_X, INFO_BOX_Y, INFO_BOX_W, INFO_BOX_H, "1-2. 직원 수정");
+    draw_box(INFO_BOX_X, INFO_BOX_Y, INFO_BOX_W, INFO_BOX_H, "1-2. 직원 수정/삭제");
     set_color(15, 0);
 
     // 1. 수정할 ID 입력 받기
-    gotoxy(INFO_BOX_X + 2, y_pos); printf("수정할 직원의 ID를 입력하세요: ");
+    gotoxy(INFO_BOX_X + 2, y_pos); printf("수정/삭제할 직원의 ID를 입력하세요: ");
     set_color(14, 0);
     gotoxy(INFO_BOX_X + 35, y_pos); 
     SetConsoleCursorInfo(hConsole, &cursorInfo); // 커서 보이게
@@ -630,7 +630,7 @@ void show_admin_info_menu(User* user)
             {
                 gotoxy(MENU_X, BOX_Y + 14);
                 set_color(11, 0);
-                printf(">> 2. 직원 수정 실행                 ");
+                printf(">> 2. 직원 수정/삭제 실행                 ");
                 Sleep(500);
                 edit_employee(user);
                 DRAW_ADMIN_MENU_UI();
