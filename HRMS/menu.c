@@ -126,6 +126,7 @@ void show_main_menu(User* user)
                         Sleep(700);
                         notice_admin_menu(user);   // 관리자 공지사항 메뉴 실행
                         system("cls");
+                        MAIN_MENU_UI();
                     }
                     else // 직원: 4. 결재 처리
                     {
@@ -150,6 +151,7 @@ void show_main_menu(User* user)
                         Sleep(700);
                         notice_employee_menu();   // 직원 공지사항 메뉴 실행
                         system("cls");
+                        MAIN_MENU_UI();
                     }
                     break;
                 }
