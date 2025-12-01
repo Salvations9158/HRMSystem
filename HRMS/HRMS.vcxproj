@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="Attendance.txt" />
+    <Text Include="Evaluation.txt" />
     <Text Include="Notice.txt" />
     <Text Include="User.txt" />
   </ItemGroup>

@@ -23,7 +23,7 @@ if (is_admin) \
 { \
     draw_button(menu_x, 6, "1. 직원 데이터 관리", 0); \
     draw_button(menu_x, 8, "2. 근태 관리       ", 0); \
-    draw_button(menu_x, 10, "3. 급여 관리       ", 0); \
+    draw_button(menu_x, 10, "3. 급여/평가 관리  ", 0); \
     draw_button(menu_x, 12, "4. 공지사항 관리   ", 0); \
     draw_button(menu_x, 14, "5. 결재 관리       ", 0); \
     draw_button(menu_x, 18, "0. 로그아웃        ", 0); \
