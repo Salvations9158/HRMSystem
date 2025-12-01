@@ -1,7 +1,7 @@
 /*
 담당자: 이은수
 최근 업데이트: 2025.12.01
-진행상태: 공지사항 관리 기능 구현 완료
+진행상태: 공지사항 관리 기능 구현 완료 (뒤로가기/취소 기능 추가됨)
 */
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -12,9 +12,9 @@
             공지사항 관리 시스템 (TUI 기반)
 =========================================================
 - 공지 목록 조회 / 상세 보기 / 등록 / 수정 / 삭제
-- 관리자 및 직원 메뉴 분리 (직원도 글 작성/수정/삭제 가능)
-- 긴 텍스트 UI 깨짐 방지 및 입력 버퍼 처리 완료
-- [Update] 성공/실패 메시지 컬러 출력 적용
+- 관리자 및 직원 메뉴 분리
+- [Update] 등록 중 취소 기능 추가 (제목에서 엔터)
+- [Update] 조회/수정/삭제 선택 시 '0' 입력으로 뒤로가기 추가
 =========================================================
 */
 
@@ -102,7 +102,7 @@ void input_string(char* buf, int size) {
 }
 
 // ------------------------------------------------------------------
-// 공지 등록 기능
+// 공지 등록 기능 (수정됨: 취소 기능 추가)
 // ------------------------------------------------------------------
 void notice_add(User* user) {
     system("cls"); // 화면 초기화
@@ -111,11 +111,9 @@ void notice_add(User* user) {
     // 안전장치: user 정보가 제대로 넘어왔는지 확인
     if (user == NULL) {
         gotoxy(BOX_X + 2, BOX_Y + 2);
-
         set_color(12, 0); // [색상] 빨간색 (오류)
         printf("오류: 로그인 정보가 없습니다.");
         set_color(15, 0); // [색상] 복구
-
         _getch();
         return;
     }
@@ -126,10 +124,19 @@ void notice_add(User* user) {
     strcpy(n->writer_id, user->id);
     get_today2(n->date);
 
-    // 제목 입력
+    // 제목 입력 (빈칸 입력 시 취소)
     gotoxy(BOX_X + 2, BOX_Y + 2);
-    printf("제목: ");
+    printf("제목 (빈칸 입력 시 취소): ");
     input_string(n->title, sizeof(n->title));
+
+    // [수정] 제목이 비어있으면 등록 취소
+    if (strlen(n->title) == 0) {
+        notice_next_id--; // ID 증가 되돌리기
+        gotoxy(BOX_X, BOX_Y + BOX_H + 3);
+        printf("등록이 취소되었습니다. 아무 키나 누르세요.");
+        _getch();
+        return;
+    }
 
     // 내용 입력
     gotoxy(BOX_X + 2, BOX_Y + 4);
@@ -141,7 +148,6 @@ void notice_add(User* user) {
     save_notice();
 
     gotoxy(BOX_X, BOX_Y + BOX_H + 3);
-
     set_color(10, 0); // [색상] 초록색 (성공)
     printf("등록 완료! 아무 키나 누르세요.");
     set_color(15, 0); // [색상] 복구
@@ -150,7 +156,7 @@ void notice_add(User* user) {
 }
 
 // ------------------------------------------------------------------
-// 공지 목록 출력
+// 공지 목록 출력 (수정됨: 안내 문구 변경)
 // ------------------------------------------------------------------
 void print_notice_list(const char* title) {
     draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, (char*)title);
@@ -175,18 +181,22 @@ void print_notice_list(const char* title) {
             notice_list[i].date);
     }
 
+    // [수정] 안내 문구 변경
     gotoxy(BOX_X, BOX_Y + BOX_H + 3);
-    printf("상세보기: 공지 번호 입력 → ");
+    printf("번호 입력 (0: 뒤로가기) → ");
 }
 
 // ------------------------------------------------------------------
-// 공지 상세보기
+// 공지 상세보기 (수정됨: 0 입력 시 뒤로가기)
 // ------------------------------------------------------------------
 void notice_view_detail() {
     int sel;
-    gotoxy(MENU_X + 8, BOX_Y + BOX_H + 3);
+    gotoxy(MENU_X + 10, BOX_Y + BOX_H + 3);
     scanf("%d", &sel);
     while (getchar() != '\n');
+
+    // [수정] 0 입력 시 뒤로가기
+    if (sel == 0) return;
 
     system("cls");
     draw_box(BOX_X, BOX_Y, BOX_W, BOX_H, "공지 상세보기");
@@ -222,7 +232,6 @@ void notice_view_detail() {
 
     // 찾는 번호 없을 때
     gotoxy(BOX_X, BOX_Y + BOX_H + 3);
-
     set_color(12, 0); // [색상] 빨간색 (경고)
     printf("해당 번호의 공지 없음. 아무 키나 누르세요.");
     set_color(15, 0); // [색상] 복구
@@ -231,15 +240,18 @@ void notice_view_detail() {
 }
 
 // ------------------------------------------------------------------
-// 공지 수정
+// 공지 수정 (수정됨: 0 입력 시 뒤로가기)
 // ------------------------------------------------------------------
 void notice_edit() {
     int sel;
 
     // 수정할 번호 입력
-    gotoxy(MENU_X + 8, BOX_Y + BOX_H + 3);
+    gotoxy(MENU_X + 10, BOX_Y + BOX_H + 3);
     scanf("%d", &sel);
     while (getchar() != '\n'); // 버퍼 비우기
+
+    // [수정] 0 입력 시 뒤로가기
+    if (sel == 0) return;
 
     for (int i = 0; i < notice_count; i++) {
         if (notice_list[i].id == sel) {
@@ -263,7 +275,6 @@ void notice_edit() {
             save_notice();
 
             gotoxy(BOX_X, BOX_Y + BOX_H + 3);
-
             set_color(10, 0); // [색상] 초록색 (성공)
             printf("수정 완료! 아무 키나 누르세요.");
             set_color(15, 0); // [색상] 복구
@@ -274,7 +285,6 @@ void notice_edit() {
     }
 
     gotoxy(BOX_X, BOX_Y + BOX_H + 3);
-
     set_color(12, 0); // [색상] 빨간색 (경고)
     printf("해당 번호 없음. 아무 키나 누르세요.");
     set_color(15, 0); // [색상] 복구
@@ -283,15 +293,18 @@ void notice_edit() {
 }
 
 // ------------------------------------------------------------------
-// 공지 삭제
+// 공지 삭제 (수정됨: 0 입력 시 뒤로가기)
 // ------------------------------------------------------------------
 void notice_delete() {
     int sel;
 
     // 삭제할 번호 입력
-    gotoxy(MENU_X + 8, BOX_Y + BOX_H + 3);
+    gotoxy(MENU_X + 10, BOX_Y + BOX_H + 3);
     scanf("%d", &sel);
     while (getchar() != '\n'); // 버퍼 비우기
+
+    // [수정] 0 입력 시 뒤로가기
+    if (sel == 0) return;
 
     for (int i = 0; i < notice_count; i++) {
         if (notice_list[i].id == sel) {
@@ -302,7 +315,6 @@ void notice_delete() {
             save_notice();
 
             gotoxy(BOX_X, BOX_Y + BOX_H + 3);
-
             set_color(10, 0); // [색상] 초록색 (성공)
             printf("삭제 완료! 아무 키나 누르세요.");
             set_color(15, 0); // [색상] 복구
@@ -313,7 +325,6 @@ void notice_delete() {
     }
 
     gotoxy(BOX_X, BOX_Y + BOX_H + 3);
-
     set_color(12, 0); // [색상] 빨간색 (경고)
     printf("해당 번호 없음. 아무 키나 누르세요.");
     set_color(15, 0); // [색상] 복구
@@ -370,8 +381,9 @@ void notice_admin_menu(User* user) {
         }
     }
 }
+
 // ------------------------------------------------------------------
-// 직원 공지 메뉴 (수정됨: 조회 전용)
+// 직원 공지 메뉴
 // ------------------------------------------------------------------
 void notice_employee_menu(User* user) {
     int mx, my;
