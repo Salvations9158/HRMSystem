@@ -149,7 +149,7 @@ void show_main_menu(User* user)
                     {
                         printf(">> [직원] 공지사항 조회 기능 실행        ");
                         Sleep(700);
-                        //notice_employee_menu();   // 직원 공지사항 메뉴 실행
+                        notice_employee_menu(user);   // 직원 공지사항 메뉴 실행
                         system("cls");
                         MAIN_MENU_UI();
                     }
