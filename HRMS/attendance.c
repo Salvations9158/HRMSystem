@@ -319,7 +319,7 @@ void attendance_menu(User* user) {
             // 돌아오면 while(1)의 맨 위에서 UI 다시 그림
         }
 
-        // 전체 근태 조회 (관리자만)
+        // 전체 근태 조회 (관리자만)x`
         else if (is_admin &&
             my == BTN_Y_4 && mx >= MENU_X && mx <= MENU_X + BTN_WIDTH) {
             all_attendance();

@@ -114,11 +114,11 @@ void show_main_menu(User* user)
                     {
                         printf(">> [직원] 급여 / 평가 기능 실행          ");
 						Sleep(500);
-                        input_team_evaluation(user);
-
+                        run_salary_eval_employee(user);
+                        MAIN_MENU_UI();
                     }   
                     break;
-
+                    
                 case 12: // 관리자: 4. 공지사항 관리
                     if (is_admin)
                     {
@@ -126,7 +126,7 @@ void show_main_menu(User* user)
                         Sleep(700);
                         notice_admin_menu(user);   // 관리자 공지사항 메뉴 실행
                         system("cls");
-                        MAIN_MENU_UI();
+                        MAIN_MENU_UI(); 
                     }
                     else // 직원: 4. 결재 처리
                     {
@@ -149,7 +149,7 @@ void show_main_menu(User* user)
                     {
                         printf(">> [직원] 공지사항 조회 기능 실행        ");
                         Sleep(700);
-                        notice_employee_menu();   // 직원 공지사항 메뉴 실행
+                        //notice_employee_menu();   // 직원 공지사항 메뉴 실행
                         system("cls");
                         MAIN_MENU_UI();
                     }

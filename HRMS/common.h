@@ -94,6 +94,14 @@ void my_attendance(User* user);    // 로그인한 직원의 근태 조회 화면
 void all_attendance();             // 전체 직원 근태 조회 (관리자 전용)
 void attendance_menu(User* user);  // 근태 관리 메인 메뉴 (마우스 기반 TUI)
 
+// =====================================================
+// 평가관련 함수
+// =====================================================
+
+void run_salary_eval_admin(User * user);        // 관리자용 급여 수정 및 평가 메뉴
+void run_salary_eval_employee(User* user); // 직원용 급여 조회 및 평가 입력 메뉴
+void input_team_evaluation(User* evaluator); // 팀원 인사 평가 입력 로직
+
 
 // =====================================================
 // 공지사항 관련
@@ -105,7 +113,7 @@ void notice_list_admin();             // 관리자용 공지 목록 조회
 void notice_list_employee();          // 직원용 공지 목록 조회
 void notice_edit();                   // 기존 공지 수정
 void notice_employee_menu();          // 직원용 공지 메뉴
-void notice_view_detail();            // 공지 상세보기
+void notice_view_detail();            // 공지 상세보기  
 
 
 // =====================================================
