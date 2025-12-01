@@ -102,9 +102,9 @@ void attendance_menu(User* user);  // 근태 관리 메인 메뉴 (마우스 기반 TUI)
 void notice_admin_menu(User* user);   // 관리자용 공지사항 메뉴
 void notice_add(User* user);          // 공지 작성
 void notice_list_admin();             // 관리자용 공지 목록 조회
+void notice_list_employee();          // 직원용 공지 목록 조회
 void notice_edit();                   // 기존 공지 수정
 void notice_employee_menu();          // 직원용 공지 메뉴
-void notice_list_employee();          // 직원용 공지 목록 조회
 void notice_view_detail();            // 공지 상세보기
 
 

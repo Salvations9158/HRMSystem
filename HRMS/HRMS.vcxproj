@@ -39,6 +39,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="notice.c" />
     <ClCompile Include="ui.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
@@ -49,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="Attendance.txt" />
+    <Text Include="Notice.txt" />
     <Text Include="User.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

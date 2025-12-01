@@ -45,6 +45,7 @@ SetConsoleMode(hInput, (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_MOUSE_INPUT | E
 // 메인 메뉴 화면 (기존과 동일)
 void show_main_menu(User* user)
 {
+    system("cls");
     int mx, my;
     int is_admin = (strcmp(user->position, "관리자") == 0 || strcmp(user->id, "admin") == 0);
 
@@ -122,7 +123,9 @@ void show_main_menu(User* user)
                     if (is_admin)
                     {
                         printf(">> [관리자] 공지사항 관리 기능 실행      ");
-                        //여기다가 작업
+                        Sleep(700);
+                        notice_admin_menu(user);   // 관리자 공지사항 메뉴 실행
+                        system("cls");
                     }
                     else // 직원: 4. 결재 처리
                     {
@@ -144,7 +147,9 @@ void show_main_menu(User* user)
                     else // 직원: 5. 공지사항
                     {
                         printf(">> [직원] 공지사항 조회 기능 실행        ");
-                        //여기다가 작업
+                        Sleep(700);
+                        notice_employee_menu();   // 직원 공지사항 메뉴 실행
+                        system("cls");
                     }
                     break;
                 }

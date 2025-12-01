@@ -42,6 +42,9 @@
     <ClCompile Include="evaluation.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="notice.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -53,6 +56,9 @@
       <Filter>리소스 파일</Filter>
     </Text>
     <Text Include="User.txt">
+      <Filter>리소스 파일</Filter>
+    </Text>
+    <Text Include="Notice.txt">
       <Filter>리소스 파일</Filter>
     </Text>
   </ItemGroup>
