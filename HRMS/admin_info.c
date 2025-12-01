@@ -235,7 +235,7 @@ void edit_employee(User* user) {
     // 1. 수정할 ID 입력 받기
     gotoxy(INFO_BOX_X + 2, y_pos); printf("수정/삭제할 직원의 ID를 입력하세요: ");
     set_color(14, 0);
-    gotoxy(INFO_BOX_X + 35, y_pos); 
+    gotoxy(INFO_BOX_X + 38, y_pos); 
     SetConsoleCursorInfo(hConsole, &cursorInfo); // 커서 보이게
     scanf_s("%s", target_id, (unsigned)sizeof(target_id));
     while (getchar() != '\n');
